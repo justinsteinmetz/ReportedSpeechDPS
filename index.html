@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Reported Speech — Control System</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+    margin: 0;
+    padding: 40px;
+    background: #0f0f0f;
+    font-family: "Libre Baskerville", serif;
+}
+
+.page {
+    max-width: 800px;
+    margin: auto;
+    padding: 70px 80px;
+    background: #f5ecd9;
+}
+
+h2 { margin-top: 0; }
+
+.rule {
+    background: #e3d6b8;
+    padding: 15px;
+    margin-bottom: 30px;
+    font-size: 15px;
+}
+
+.section {
+    margin-top: 50px;
+    opacity: 0.35;
+    transition: 0.3s;
+}
+
+.section.active {
+    opacity: 1;
+}
+
+.quote {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.input-line {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #333;
+    background: transparent;
+    font-size: 16px;
+    margin: 15px 0 30px;
+    outline: none;
+}
+
+.note {
+    font-family: "Caveat", cursive;
+    font-size: 18px;
+    margin-top: -20px;
+    margin-bottom: 20px;
+    min-height: 22px;
+}
+
+.correct { color: #1f3a5f; }
+.error { color: #7a1f1f; }
+
+.progress {
+    height: 6px;
+    background: #ddd;
+    margin-bottom: 30px;
+}
+
+.bar {
+    height: 6px;
+    width: 0%;
+    background: #1f3a5f;
+    transition: 0.3s;
+}
+</style>
+</head>
+
+<body>
+
+<div class="page">
+
+<h2>Reported Speech — Control System</h2>
+
+<div class="progress"><div class="bar" id="bar"></div></div>
+
+<div class="rule">
+<b>Commands:</b> told + object + to + verb<br>
+<b>Statements:</b> said (that) + clause<br>
+<b>Backshift:</b> can → could
+</div>
+
+<!-- SECTION 1 -->
+<div id="s1" class="section active">
+<h3>1. Build it</h3>
+
+<div class="quote" id="dynamicQuote"></div>
+<input id="i1" class="input-line" oninput="process(1)">
+<div id="f1" class="note"></div>
+
+<div class="quote">“Stand on your desks.”</div>
+<input id="i2" class="input-line" oninput="process(2)">
+<div id="f2" class="note"></div>
+</div>
+
+<!-- SECTION 2 -->
+<div id="s2" class="section">
+<h3>2. Diagnose the error</h3>
+
+<div class="quote">He said them to stand on their desks.</div>
+<input id="i3" class="input-line" oninput="process(3)">
+<div id="f3" class="note"></div>
+</div>
+
+<!-- SECTION 3 -->
+<div id="s3" class="section">
+<h3>3. Fix it</h3>
+
+<div class="quote">He said them to stand on their desks.</div>
+<input id="i4" class="input-line" oninput="process(4)">
+<div id="f4" class="note"></div>
+</div>
+
+<!-- SECTION 4 -->
+<div id="s4" class="section">
+<h3>4. Combine</h3>
+
+<div class="quote">
+Use BOTH:<br>
+• told + object + to<br>
+• said + (that) + could
+</div>
+
+<input id="i5" class="input-line" oninput="process(5)">
+<div id="f5" class="note"></div>
+</div>
+
+</div>
+
+<script>
+
+/* STATE */
+
+let done = [false,false,false,false,false];
+let attempts = [0,0,0,0,0];
+
+let profile = {
+    saidObject: 0,
+    pronoun: 0,
+    backshift: 0
+};
+
+/* VALID OBJECTS */
+
+const validObjects = [
+    "them","him","her",
+    "the students","the boys","the class",
+    "the group","the children",
+    "his students","her students"
+];
+
+function hasValidObject(val){
+    if (validObjects.some(obj => val.includes("told " + obj + " to"))) return true;
+    if (/told (my|his|her|their) [a-z]+ to/.test(val)) return true;
+    return false;
+}
+
+/* VARIATION */
+
+const commands = [
+    "open the window",
+    "sit down",
+    "write the answer",
+    "listen carefully",
+    "close the door"
+];
+
+let currentCommand = commands[Math.floor(Math.random()*commands.length)];
+
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("dynamicQuote").textContent =
+        "“" + currentCommand + ".”";
+});
+
+/* CLEAN */
+
+function clean(t){
+    return t.toLowerCase()
+        .replace(/[.!?]/g,"")
+        .replace(/\s+/g," ")
+        .trim();
+}
+
+/* PROGRESS */
+
+function updateBar(){
+    let count = done.filter(x=>x).length;
+    document.getElementById("bar").style.width = (count/5*100)+"%";
+}
+
+/* UNLOCK */
+
+function unlock(id){
+    document.getElementById("s"+id).classList.add("active");
+}
+
+/* TRACK ERRORS */
+
+function trackErrors(val){
+    if (/said (them|him|her)/.test(val)) profile.saidObject++;
+    if (/your desks/.test(val)) profile.pronoun++;
+    if (/can /.test(val)) profile.backshift++;
+}
+
+/* GLOBAL ERRORS */
+
+function globalErrors(val, f){
+
+    if (/said (them|him|her)/.test(val)){
+        f.textContent = "❌ 'said' cannot take an object";
+        return true;
+    }
+
+    if (/your desks/.test(val)){
+        f.textContent = "❌ Change 'your' → 'their'";
+        return true;
+    }
+
+    if (/can change/.test(val)){
+        f.textContent = "❌ Backshift needed: can → could";
+        return true;
+    }
+
+    return false;
+}
+
+/* VALIDATION */
+
+function validateTold(val, verbPhrase){
+
+    if (!/he told/.test(val)) return "Missing 'told'";
+    if (!hasValidObject(val)) return "Use a real object (e.g. them / the students)";
+    if (!/to [a-z]+/.test(val)) return "Missing verb after 'to'";
+    if (!new RegExp("to " + verbPhrase).test(val)) return "Incorrect verb phrase";
+
+    return "ok";
+}
+
+/* FAIL */
+
+function failState(input, f, id){
+
+    attempts[id-1]++;
+
+    if (attempts[id-1] >= 3){
+        input.style.background = "#f8d7da";
+    }
+
+    if (attempts[id-1] >= 5){
+        input.disabled = true;
+        f.textContent = "Model: " + model(id);
+    }
+}
+
+/* MODEL */
+
+function model(id){
+    return [
+        "He told them to " + currentCommand + ".",
+        "He told them to stand on their desks.",
+        "'said' cannot take an object.",
+        "He told them to stand on their desks.",
+        "He told them to stand on their desks and he said that words and ideas could change the world."
+    ][id-1];
+}
+
+/* ADAPTIVE */
+
+function nextChallenge(){
+
+    let container = document.querySelector(".page");
+    let task = "";
+
+    if (profile.saidObject >= 2){
+        task = `
+        <div class="section active">
+        <h3>⚠ Targeted Repair</h3>
+        <div class="quote">He said her to sit down.</div>
+        <input class="input-line" oninput="adaptiveCheck(this,'told')">
+        <div class="note"></div>
+        </div>`;
+    }
+
+    else if (profile.backshift >= 2){
+        task = `
+        <div class="section active">
+        <h3>⚠ Backshift Control</h3>
+        <div class="quote">“You can change the world.”</div>
+        <input class="input-line" oninput="adaptiveCheck(this,'backshift')">
+        <div class="note"></div>
+        </div>`;
+    }
+
+    else {
+        task = `
+        <div class="section active">
+        <h3>⚠ Mastery Check</h3>
+        <div class="quote">“Listen carefully.” + “Words can change everything.”</div>
+        <input class="input-line" oninput="adaptiveCheck(this,'mixed')">
+        <div class="note"></div>
+        </div>`;
+    }
+
+    container.insertAdjacentHTML("beforeend", task);
+}
+
+/* ADAPTIVE CHECK */
+
+function adaptiveCheck(input,type){
+
+    let val = clean(input.value);
+    let f = input.nextElementSibling;
+
+    if (type === "told"){
+        if (/he told/.test(val) && hasValidObject(val) && /to sit down/.test(val)){
+            f.textContent = "✓ Good";
+            input.disabled = true;
+        }
+    }
+
+    if (type === "backshift"){
+        if (/he said (that )?you could change the world/.test(val)){
+            f.textContent = "✓ Backshift controlled";
+            input.disabled = true;
+        }
+    }
+
+    if (type === "mixed"){
+        if (/told/.test(val) && /said/.test(val) && /could/.test(val)){
+            f.textContent = "✓ Full control";
+            input.disabled = true;
+        }
+    }
+}
+
+/* PROCESS */
+
+function process(id){
+
+    if (done[id-1]) return;
+
+    const input = document.getElementById("i"+id);
+    const f = document.getElementById("f"+id);
+    let val = clean(input.value);
+
+    trackErrors(val);
+
+    if (globalErrors(val,f)) return;
+
+    let ok = false;
+
+/* BUILD */
+
+    if (id === 1){
+        let r = validateTold(val, currentCommand);
+        if (r === "ok") ok = true;
+        else f.textContent = "❌ " + r;
+    }
+
+    if (id === 2){
+        let r = validateTold(val, "stand on their desks");
+        if (r === "ok") ok = true;
+        else f.textContent = "❌ " + r;
+    }
+
+/* DIAGNOSE */
+
+    if (id === 3){
+        ok = /said them/.test(val) &&
+             /(cannot take an object|no object after said)/.test(val);
+    }
+
+/* FIX */
+
+    if (id === 4){
+        let r = validateTold(val, "stand on their desks");
+        if (r === "ok") ok = true;
+    }
+
+/* COMBINE */
+
+    if (id === 5){
+        let told = /told [a-z\s]+ to stand on their desks/.test(val);
+        let said = /he said (that )?words and ideas could change the world/.test(val);
+        let connector = /and he said/.test(val);
+        ok = told && said && connector;
+    }
+
+/* RESULT */
+
+    if (ok){
+        f.textContent = "✓ Locked";
+        f.className = "note correct";
+        input.disabled = true;
+        done[id-1] = true;
+        updateBar();
+
+        if (id === 2) unlock(2);
+        if (id === 3) unlock(3);
+        if (id === 4) unlock(4);
+
+        if (done.every(x => x)){
+            nextChallenge();
+        }
+
+    } else {
+        f.className = "note error";
+        failState(input,f,id);
+    }
+}
+
+</script>
+
+</body>
+</html>

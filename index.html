@@ -2,28 +2,39 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Reported Speech — Control System</title>
+<title>Reported Speech — Carpe Diem Protocol</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
+
 body {
     margin: 0;
     padding: 40px;
-    background: #0f0f0f;
+    background: #0d0d0d;
     font-family: "Libre Baskerville", serif;
 }
 
 .page {
-    max-width: 800px;
+    max-width: 820px;
     margin: auto;
     padding: 70px 80px;
     background: #f5ecd9;
 }
 
+h2 {
+    margin-top: 0;
+}
+
+.subtitle {
+    font-size: 14px;
+    margin-bottom: 30px;
+    opacity: 0.7;
+}
+
 .section {
-    margin-top: 40px;
-    opacity: 0.4;
+    margin-top: 50px;
+    opacity: 0.35;
     transition: 0.3s;
 }
 
@@ -49,7 +60,7 @@ body {
 .note {
     font-family: "Caveat", cursive;
     font-size: 18px;
-    min-height: 20px;
+    min-height: 22px;
 }
 
 .correct { color: #1f3a5f; }
@@ -66,6 +77,14 @@ body {
     width: 0%;
     background: #1f3a5f;
 }
+
+.rule {
+    background: #e3d6b8;
+    padding: 15px;
+    margin-bottom: 30px;
+    font-size: 15px;
+}
+
 </style>
 </head>
 
@@ -73,31 +92,36 @@ body {
 
 <div class="page">
 
-<h2>Reported Speech — Control System</h2>
+<h2>Reported Speech — Carpe Diem Protocol</h2>
+<div class="subtitle">Not imitation. Control the system.</div>
 
 <div class="progress"><div class="bar" id="bar"></div></div>
 
-<p><b>Commands:</b> told + object + to + verb<br>
+<div class="rule">
+<b>Commands:</b> reporting verb + object + to + verb<br>
+(e.g. told / asked / instructed / ordered / advised)<br><br>
+
 <b>Statements:</b> said (that) + clause<br>
-<b>Backshift:</b> can → could</p>
+Backshift: can → could
+</div>
 
 <!-- SECTION 1 -->
 <div id="s1" class="section active">
-<h3>1. Build it (Commands)</h3>
+<h3>1. Commands — Build Control</h3>
 
-<div class="quote">“Listen carefully.”</div>
+<div class="quote">“Seize the day.”</div>
 <input id="i1" class="input-line" oninput="process(1)">
 <div id="f1" class="note"></div>
 
-<div class="quote">“Open the window.”</div>
+<div class="quote">“Stand on your desks.”</div>
 <input id="i2" class="input-line" oninput="process(2)">
 <div id="f2" class="note"></div>
 
-<div class="quote">“Sit down.”</div>
+<div class="quote">“Listen carefully.”</div>
 <input id="i3" class="input-line" oninput="process(3)">
 <div id="f3" class="note"></div>
 
-<div class="quote">“Write the answer.”</div>
+<div class="quote">“Think for yourself.”</div>
 <input id="i4" class="input-line" oninput="process(4)">
 <div id="f4" class="note"></div>
 
@@ -105,17 +129,17 @@ body {
 
 <!-- SECTION 2 -->
 <div id="s2" class="section">
-<h3>2. Build it (Statements + Backshift)</h3>
+<h3>2. Statements — Control Meaning</h3>
 
-<div class="quote">“You can change the world.”</div>
+<div class="quote">“Words can change the world.”</div>
 <input id="i5" class="input-line" oninput="process(5)">
 <div id="f5" class="note"></div>
 
-<div class="quote">“We can win this.”</div>
+<div class="quote">“You can make your lives extraordinary.”</div>
 <input id="i6" class="input-line" oninput="process(6)">
 <div id="f6" class="note"></div>
 
-<div class="quote">“They can do it.”</div>
+<div class="quote">“We can think differently.”</div>
 <input id="i7" class="input-line" oninput="process(7)">
 <div id="f7" class="note"></div>
 
@@ -123,7 +147,7 @@ body {
 
 <!-- SECTION 3 -->
 <div id="s3" class="section">
-<h3>3. Combine</h3>
+<h3>3. Combine — No Escape</h3>
 
 <div class="quote">
 “Stand on your desks.”<br>
@@ -168,33 +192,37 @@ function unlock(id){
 function globalErrors(val, f){
 
     if (/said (them|him|her)/.test(val)){
-        f.textContent = "❌ 'said' cannot take an object → use 'told'";
-        f.className = "note error";
+        f.textContent = "❌ 'said' cannot take an object";
         return true;
     }
 
     if (/your desks/.test(val)){
         f.textContent = "❌ Change 'your' → 'their'";
-        f.className = "note error";
         return true;
     }
 
     return false;
 }
 
-/* VALID OBJECT */
+/* REPORTING VERB */
 
-function hasObject(val){
-    return /told (them|him|her|the students|the class)/.test(val);
+function hasReportingVerb(val){
+    return /(told|asked|instructed|ordered|advised|urged)/.test(val);
 }
 
-/* VALIDATE COMMAND */
+/* OBJECT */
+
+function hasObject(val){
+    return /(them|him|her|the students|the class)/.test(val);
+}
+
+/* COMMAND VALIDATION */
 
 function validateCommand(val, phrase){
 
-    if (!/told/.test(val)) return "Use 'told'";
-    if (!hasObject(val)) return "Add object (them / the students)";
-    if (!new RegExp("to " + phrase).test(val)) return "Incorrect verb";
+    if (!hasReportingVerb(val)) return "Use a reporting verb (told / asked / instructed)";
+    if (!hasObject(val)) return "Add an object";
+    if (!new RegExp("to " + phrase).test(val)) return "Use: to + verb";
 
     return "ok";
 }
@@ -209,7 +237,10 @@ function process(id){
     let f = document.getElementById("f"+id);
     let val = clean(input.value);
 
-    if (globalErrors(val,f)) return;
+    if (globalErrors(val,f)){
+        f.className = "note error";
+        return;
+    }
 
     let ok = false;
 
@@ -217,14 +248,19 @@ function process(id){
 
     if (id <= 4){
         let phrases = [
+            "seize the day",
+            "stand on their desks",
             "listen carefully",
-            "open the window",
-            "sit down",
-            "write the answer"
+            "think for themselves"
         ];
+
         let r = validateCommand(val, phrases[id-1]);
+
         if (r === "ok") ok = true;
-        else f.textContent = "❌ " + r;
+        else {
+            f.textContent = "❌ " + r;
+            f.className = "note error";
+        }
     }
 
 /* STATEMENTS */
@@ -233,8 +269,8 @@ function process(id){
 
         let targets = [
             "change the world",
-            "win this",
-            "do it"
+            "make their lives extraordinary",
+            "think differently"
         ];
 
         let hasSaid = /he said/.test(val);
@@ -245,6 +281,7 @@ function process(id){
 
         if (!ok){
             f.textContent = "❌ Use: He said (that) ... could ...";
+            f.className = "note error";
         }
     }
 
@@ -252,7 +289,8 @@ function process(id){
 
     if (id === 8){
 
-        let hasTold = /he told (them|him|her|the students|the class) to stand on their desks/.test(val);
+        let hasTold = /(told|asked|instructed|ordered|advised|urged)/.test(val)
+            && /to stand on their desks/.test(val);
 
         let hasSaid = /said (that )?words could change the world/.test(val);
 
@@ -261,7 +299,8 @@ function process(id){
         ok = hasTold && hasSaid && hasConnector;
 
         if (!ok){
-            f.textContent = "❌ Use both structures correctly";
+            f.textContent = "❌ Combine both structures correctly";
+            f.className = "note error";
         }
     }
 
@@ -276,9 +315,6 @@ function process(id){
 
         if (id === 4) unlock(2);
         if (id === 7) unlock(3);
-
-    } else {
-        f.className = "note error";
     }
 }
 
